@@ -10,8 +10,10 @@ from pathlib import Path
 import re
 import sys
 
+# Generated version-control and Python cache data are not part of GitHub source snapshots.
+SKIPPED_PARTS = {'.git', '__pycache__', '.pytest_cache'}
 DISALLOWED_PARTS = {
-    '.git', '.auth', '__pycache__', 'node_modules', 'configLibrary',
+    '.auth', 'node_modules', 'configLibrary',
     '.ssh', '.gnupg', '.aws', '.config', '.DS_Store',
 }
 BAD_BASENAMES = {
@@ -40,6 +42,8 @@ def audit(root: Path) -> list[tuple[str, str]]:
         return [('root', 'Missing directory')]
     for path in sorted(root.rglob('*')):
         rel = path.relative_to(root)
+        if any(part in SKIPPED_PARTS for part in rel.parts):
+            continue
         if path.is_symlink():
             findings.append((str(rel), 'symlink - review target'))
             continue

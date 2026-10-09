@@ -16,6 +16,18 @@ class PublicReleaseAuditTests(unittest.TestCase):
             (Path(folder) / 'README.md').write_text('Use localhost:8787 on macOS.')
             self.assertEqual(module.audit(Path(folder)), [])
 
+    def test_git_metadata_and_generated_python_caches_are_not_release_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'README.md').write_text('Local-only proxy documentation.')
+            (root / '.git').mkdir()
+            (root / '.git' / 'config').write_text('user.email=private' + '@' + 'example.com')
+            (root / '__pycache__').mkdir()
+            (root / '__pycache__' / 'module.pyc').write_bytes(b'cached')
+            (root / '.pytest_cache').mkdir()
+            (root / '.pytest_cache' / 'notes.txt').write_text('generated')
+            self.assertEqual(module.audit(root), [])
+
     def test_rejects_auth_file_and_real_env(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
