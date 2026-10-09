@@ -1,0 +1,24 @@
+name: Validate documentation and release safety
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Detect common sensitive data (heuristic)
+        run: python3 scripts/public_release_audit.py --strict
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Bash syntax
+        run: bash -n scripts/*.sh
+      - name: Python syntax
+        run: python3 -m compileall -q scripts tests
+      - name: Check Markdown local links
+        run: python3 scripts/check_local_links.py
